@@ -130,7 +130,7 @@ ETHERSCAN_API_KEY=your_etherscan_api_key
 Run backend:
 
 ```
-npm start
+node server.js
 ```
 
 ---
