@@ -100,7 +100,7 @@ cd YOUR_REPO_NAME
 cd backend
 npm install
 ```
----
+
 
 ## 🔐 Environment Variables
 
@@ -124,7 +124,7 @@ PRIVATE_KEY=your_wallet_private_key
 CONTRACT_ADDRESS=your_deployed_contract_address
 ETHERSCAN_API_KEY=your_etherscan_api_key
 
----
+
 Run backend:
 
 ```
