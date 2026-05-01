@@ -1,4 +1,4 @@
-# Blockchain-Based Certificate Verification & File Integrity System
+# Blockchain Based Certificate File Integrity System
 
 ## 📌 Description
 
