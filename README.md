@@ -1,4 +1,4 @@
-# Blockchain Based Certificate File Integrity System
+# Blockchain-Based Certificate Verification & File Integrity System
 
 ## 📌 Description
 
@@ -101,12 +101,13 @@ cd backend
 npm install
 ```
 
+---
 
 ## 🔐 Environment Variables
 
 Create a `.env` file inside the **backend** and **blockchain** folders and add the following:
 
-```env
+```
 PORT=5000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
@@ -123,12 +124,13 @@ RPC_URL=your_sepolia_rpc_url
 PRIVATE_KEY=your_wallet_private_key
 CONTRACT_ADDRESS=your_deployed_contract_address
 ETHERSCAN_API_KEY=your_etherscan_api_key
-
+```
+---
 
 Run backend:
 
 ```
-node server.js
+npm start
 ```
 
 ---
