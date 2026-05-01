@@ -1,9 +1,10 @@
 import React, { useState } from "react";
+import toast from "react-hot-toast";
 import { useNavigate, Link } from "react-router-dom";
 import {
   Mail,
   Lock,
-  ShieldCheck
+  Users
 } from "lucide-react";
 
 import API from "../../api/axios";
@@ -43,7 +44,7 @@ const Login = () => {
       localStorage.setItem("userName", res.data.name || "");
 
       const role = res.data.role;
-
+      toast.success("Login successful");
       if (role === "admin") navigate("/admin-dashboard");
       else if (role === "institute") navigate("/institute-dashboard");
       else if (role === "user") navigate("/user-dashboard");
@@ -110,7 +111,7 @@ const Login = () => {
           </h1>
 
           <p className="text-sm text-gray-600 dark:text-gray-300">
-            Secure • Verified • Trusted
+            Trust, Engineered on Blockchain
           </p>
         </div>
 
@@ -128,9 +129,9 @@ const Login = () => {
             </p>
 
             <h2 className="text-6xl font-bold leading-tight text-gray-900 dark:text-white">
-              Secure.
+              Secure
               <br />
-              Verify.
+              Instant
               <br />
               <span
                 className="
@@ -142,7 +143,7 @@ const Login = () => {
                   text-transparent
                 "
               >
-                Trust.
+                Trust
               </span>
             </h2>
 
@@ -195,7 +196,7 @@ const Login = () => {
             "
           >
             <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white">
-              Welcome Back
+              Welcome
             </h2>
 
             <p className="text-center mt-2 mb-8 text-gray-600 dark:text-gray-300">
@@ -320,7 +321,7 @@ const Login = () => {
                   hover:scale-[1.01]
                   focus-within:scale-[1.01]
                 ">
-                <ShieldCheck
+                <Users
                   size={18}
                   className="
                     absolute
@@ -379,7 +380,7 @@ const Login = () => {
                   duration-300
                 "
               >
-                {loading ? "Logging in..." : "Login Securely"}
+                {loading ? "Logging in..." : "Login"}
               </button>
             </form>
 
@@ -387,7 +388,7 @@ const Login = () => {
               Don’t have an account?{" "}
               <Link
                 to="/register"
-                className="font-semibold text-blue-600 hover:underline"
+                className="font-semibold text-blue-600 hover:text-blue-700 transition-colors"
               >
                 Register
               </Link>

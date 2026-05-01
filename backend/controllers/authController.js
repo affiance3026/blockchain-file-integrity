@@ -21,7 +21,33 @@ exports.register = async (req, res) => {
         message: "All fields are required"
       });
     }
+    // ================= VALIDATION START =================
 
+    // NAME validation
+    const nameRegex = /^[A-Za-z\s]+$/;
+
+    if (
+      !name ||
+      name.trim().length < 3 ||
+      !nameRegex.test(name)
+    ) {
+      return res.status(400).json({
+        message: "Name must contain only letters and spaces (min 3 characters)"
+      });
+    }
+
+    // PASSWORD validation
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({
+        message:
+          "Password must be at least 8 characters and include uppercase, lowercase, number, and special character"
+      });
+    }
+
+    // ================= VALIDATION END =================
     let Model;
 
     switch (role) {
@@ -69,7 +95,7 @@ exports.register = async (req, res) => {
     await newData.save();
 
     res.status(201).json({
-      message: `${role} registered successfully`,
+      message: `${role.charAt(0).toUpperCase() + role.slice(1).toLowerCase()} registered successfully`,
       id: customId
     });
 
@@ -149,7 +175,7 @@ exports.login = async (req, res) => {
 
     if (!existingUser) {
       return res.status(404).json({
-        message: `${role} not found`
+        message: `${role.charAt(0).toUpperCase() + role.slice(1).toLowerCase()} not found`
       });
     }
 
@@ -179,7 +205,7 @@ exports.login = async (req, res) => {
     );
 
     res.status(200).json({
-      message: `${role} login successful`,
+      message: `${role.charAt(0).toUpperCase() + role.slice(1).toLowerCase()} login successful`,
       role,
       token,
       id: existingUser.id,

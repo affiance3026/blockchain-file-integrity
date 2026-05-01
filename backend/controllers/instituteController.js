@@ -23,6 +23,12 @@ exports.raiseApprovalRequest = async (req, res) => {
         message: "Institute not found",
       });
     }
+    
+    if (institute.status === "pending") {
+      return res.status(400).json({
+        message: "Your request is already raised and in pending",
+      });
+    }
 
     if (!req.file) {
       return res.status(400).json({
@@ -120,7 +126,7 @@ exports.issueCertificate = async (req, res) => {
       id: certificateId,
       user_id,
       institute_id,
-      file_name: req.file.originalname,
+      file_name: req.body.file_name || req.file.originalname,
       file_url: cid,
     });
 

@@ -4,13 +4,14 @@ import toast from "react-hot-toast";
 import API from "../../api/axios";
 import Sidebar from "../../components/Sidebar";
 import ConfirmModal from "../../components/ConfirmModal";
-
+import { useRef } from "react";
 const InstituteDashboard = () => {
   const navigate = useNavigate();
   const [userId, setUserId] = useState("");
   const [userVerified, setUserVerified] = useState(false);
   const [userChecking, setUserChecking] = useState(false);
   const [userDetails, setUserDetails] = useState(null);
+  const fileInputRef = useRef(null);
 
   const [fileName, setFileName] = useState("");
   const [certificateFile, setCertificateFile] = useState(null);
@@ -147,7 +148,10 @@ const InstituteDashboard = () => {
       toast.success("Request raised successfully");
     } catch (error) {
       console.error(error);
-      toast.error("Unable to raise request");
+      toast.error(
+      error?.response?.data?.message ||
+      "Unable to raise request"
+      );
     }finally{
       setApprovalLoading(false);
     }
@@ -167,13 +171,17 @@ const InstituteDashboard = () => {
       toast.error("Please upload certificate file");
       return;
     }
-
+    if (!fileName) {
+      toast.error("Please select certificate type");
+      return;
+    }
     if (!validateFile(certificateFile)) return;
     
     try {
       const formData = new FormData();
       formData.append("user_id", userId);
       formData.append("file", certificateFile);
+      formData.append("file_name", fileName);
       setIssueLoading(true);
       await API.post(
         "/institute/issue-certificate",
@@ -186,10 +194,18 @@ const InstituteDashboard = () => {
       );
 
       setUserId("");
+      setUserVerified(false);
+      setUserDetails(null);
       setCertificateFile(null);
+      setFileName("");
+
 
       fetchIssuedCertificates();
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
       toast.success("Certificate issued successfully");
+
     } catch (error) {
       console.error(error);
       toast.error(
@@ -326,17 +342,19 @@ const InstituteDashboard = () => {
 
             <button
               onClick={handleRaiseApproval}
-              className="
+              disabled={approvalLoading}
+              className={`
                 mt-6
                 px-6
                 py-3
                 rounded-2xl
-                bg-blue-600
                 text-white
                 font-medium
-                hover:bg-blue-700
                 transition-all
-              "
+                ${approvalLoading 
+                  ? "bg-blue-400 cursor-not-allowed" 
+                  : "bg-blue-600 hover:bg-blue-700"}
+              `}
             >
               {approvalLoading
                 ? "Processing..."
@@ -435,9 +453,7 @@ const InstituteDashboard = () => {
                 </p>
               </div>
 
-              <input
-                type="text"
-                placeholder="File Name"
+              <select
                 value={fileName}
                 onChange={(e) => setFileName(e.target.value)}
                 required
@@ -453,10 +469,22 @@ const InstituteDashboard = () => {
                   dark:border-gray-700
                   text-gray-900
                   dark:text-white
-                  placeholder:text-gray-500
-                  dark:placeholder:text-gray-400
                 "
-              />
+              >
+                <option value="">Select Certificate Type</option>
+
+                <option value="10th Marksheet">10th Marksheet</option>
+                <option value="12th Marksheet">12th Marksheet</option>
+
+                <option value="Degree Certificate - Sem 1">Degree Certificate - Sem 1</option>
+                <option value="Degree Certificate - Sem 2">Degree Certificate - Sem 2</option>
+                <option value="Degree Certificate - Sem 3">Degree Certificate - Sem 3</option>
+                <option value="Degree Certificate - Sem 4">Degree Certificate - Sem 4</option>
+                <option value="Degree Certificate - Sem 5">Degree Certificate - Sem 5</option>
+                <option value="Degree Certificate - Sem 6">Degree Certificate - Sem 6</option>
+
+                <option value="Provisional Degree Certificate">Provisional Degree Certificate</option>
+              </select>
 
               <p className="text-gray-700 dark:text-gray-300 font-medium">
                 Attach certificate file below
@@ -491,28 +519,30 @@ const InstituteDashboard = () => {
                 <input
                   type="file"
                   hidden
+                  ref={fileInputRef}
                   onChange={(e) => {
                     const file = e.target.files[0];
                     setCertificateFile(file);
 
-                    if (file && !fileName) {
-                      setFileName(file.name);
-                    }
+                    
                   }}
                 />
               </label>
 
               <button
                 type="submit"
-                className="
+                disabled={issueLoading}
+                className={`
                   w-full
                   py-3
                   rounded-xl
-                  bg-blue-600
                   text-white
                   font-medium
-                  hover:bg-blue-700
-                "
+                  transition-all
+                  ${issueLoading 
+                    ? "bg-blue-400 cursor-not-allowed" 
+                    : "bg-blue-600 hover:bg-blue-700"}
+                `}
               >
                 {issueLoading
                   ? "Issuing..."
@@ -554,11 +584,11 @@ const InstituteDashboard = () => {
                 </h2>
 
                 <p className="mt-2 text-gray-600 dark:text-gray-300">
-                  User ID: {item.user_id}
+                  Certificate Name: {item.file_name}
                 </p>
 
                 <p className="mt-2 text-gray-600 dark:text-gray-300">
-                  File Name: {item.file_name}
+                  User ID: {item.user_id}
                 </p>
 
                 

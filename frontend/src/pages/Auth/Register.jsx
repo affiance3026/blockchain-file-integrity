@@ -4,7 +4,8 @@ import {
   User,
   Mail,
   Lock,
-  ShieldCheck
+  Users,
+  KeyRound
 } from "lucide-react";
 
 import API from "../../api/axios";
@@ -124,7 +125,7 @@ const Register = () => {
           </h1>
 
           <p className="text-sm text-gray-600 dark:text-gray-300">
-            Secure • Verified • Trusted
+            Trust, Engineered on Blockchain
           </p>
         </div>
 
@@ -142,9 +143,9 @@ const Register = () => {
             </p>
 
             <h2 className="text-6xl font-bold leading-tight text-gray-900 dark:text-white">
-              Register.
+              Register
               <br />
-              Connect.
+              Connect
               <br />
               <span
                 className="
@@ -156,7 +157,7 @@ const Register = () => {
                   text-transparent
                 "
               >
-                Secure.
+                Secure
               </span>
             </h2>
 
@@ -355,7 +356,7 @@ const Register = () => {
 
               {/* Confirm Password */}
               <div className="relative group transition-all duration-300 hover:scale-[1.01] focus-within:scale-[1.01]">
-                <ShieldCheck
+                <KeyRound
                   size={18}
                   className="
                     absolute
@@ -396,7 +397,7 @@ const Register = () => {
 
               {/* Role */}
               <div className="relative group transition-all duration-300 hover:scale-[1.01] focus-within:scale-[1.01]">
-                <ShieldCheck
+                <Users
                   size={18}
                   className="
                     absolute
@@ -454,7 +455,7 @@ const Register = () => {
                   duration-300
                 "
               >
-                {loading ? "Creating Account..." : "Register Securely"}
+                {loading ? "Creating Account..." : "Register"}
               </button>
             </form>
 
@@ -462,7 +463,7 @@ const Register = () => {
               Already have an account?{" "}
               <Link
                 to="/"
-                className="font-semibold text-blue-600 hover:underline"
+                className="font-semibold text-blue-600 hover:text-blue-700 transition-colors"
               >
                 Login
               </Link>
