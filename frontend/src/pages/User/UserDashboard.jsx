@@ -1,0 +1,547 @@
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+import API from "../../api/axios";
+import Sidebar from "../../components/Sidebar";
+import ConfirmModal from "../../components/ConfirmModal";
+
+const UserDashboard = () => {
+  const navigate = useNavigate();
+
+  const [activeTab, setActiveTab] = useState("Issued Documents");
+  const [loading, setLoading] = useState(false);
+
+  const [documents, setDocuments] = useState([]);
+  const [requests, setRequests] = useState([]);
+  const [profile, setProfile] = useState(null);
+
+  // Confirm Modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState("");
+  const [selectedRequestId, setSelectedRequestId] = useState(null);
+
+  // Details Modal
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [selectedCertificate, setSelectedCertificate] = useState(null);
+
+  const menuItems = [
+    "Issued Documents",
+    "Requests",
+    "Profile",
+  ];
+
+  // ================= FETCH DOCUMENTS =================
+
+  const fetchDocuments = async () => {
+    try {
+      setLoading(true);
+
+      const res = await API.get("/user/issued-documents");
+      setDocuments(res.data.data || []);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ================= FETCH REQUESTS =================
+
+  const fetchRequests = async () => {
+    try {
+      const res = await API.get("/user/access-requests");
+      setRequests(res.data.data || []);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // ================= FETCH PROFILE =================
+
+  const fetchProfile = async () => {
+    try {
+      const res = await API.get("/user/profile");
+      setProfile(res.data.data || null);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // ================= DOWNLOAD DOCUMENT =================
+
+  const handleDownload = (cid) => {
+    const fileUrl = `https://gateway.pinata.cloud/ipfs/${cid}`;
+    window.open(fileUrl, "_blank");
+  };
+
+  // ================= DETAILS MODAL =================
+
+  const openDetailsModal = (certificate) => {
+    setSelectedCertificate(certificate);
+    setDetailsModalOpen(true);
+  };
+
+  const closeDetailsModal = () => {
+    setSelectedCertificate(null);
+    setDetailsModalOpen(false);
+  };
+
+  // ================= CONFIRM MODAL =================
+
+  const openModal = (type, id = null) => {
+    setModalType(type);
+    setSelectedRequestId(id);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalType("");
+    setSelectedRequestId(null);
+    setIsModalOpen(false);
+  };
+
+  // ================= APPROVE REQUEST =================
+
+  const handleApprove = async () => {
+    try {
+      await API.put(`/user/approve-request/${selectedRequestId}`);
+
+      fetchRequests();
+      closeModal();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // ================= REJECT REQUEST =================
+
+  const handleReject = async () => {
+    try {
+      await API.put(`/user/reject-request/${selectedRequestId}`);
+
+      fetchRequests();
+      closeModal();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // ================= LOGOUT =================
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/");
+    closeModal();
+  };
+
+  // ================= CONFIRM ACTION =================
+
+  const handleConfirm = () => {
+    if (modalType === "approve") {
+      handleApprove();
+    }
+
+    if (modalType === "reject") {
+      handleReject();
+    }
+
+    if (modalType === "logout") {
+      handleLogout();
+    }
+  };
+
+  useEffect(() => {
+    fetchDocuments();
+    fetchRequests();
+    fetchProfile();
+
+    // eslint-disable-next-line
+  }, []);
+
+  // ================= RENDER CONTENT =================
+
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="text-lg text-gray-700 dark:text-white">
+          Loading...
+        </div>
+      );
+    }
+
+    // ================= ISSUED DOCUMENTS =================
+
+    if (activeTab === "Issued Documents") {
+      return (
+        <div className="grid gap-6">
+          {documents.length === 0 ? (
+            <p className="text-gray-600 dark:text-gray-300">
+              No documents found.
+            </p>
+          ) : (
+            documents.map((item) => (
+              <div
+                key={item._id}
+                className="
+                  rounded-3xl
+                  border
+                  bg-white/70
+                  dark:bg-white/5
+                  border-gray-200
+                  dark:border-white/10
+                  backdrop-blur-2xl
+                  shadow-xl
+                  p-6
+                "
+              >
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  {item.institute_name || "Institute Name"}
+                </h2>
+
+                <p className="mt-2 text-gray-600 dark:text-gray-300">
+                  {item.file_name}
+                </p>
+
+                <div className="flex gap-4 mt-6">
+                  <button
+                    onClick={() => handleDownload(item.file_url)}
+                    className="
+                      px-5
+                      py-2
+                      rounded-xl
+                      bg-blue-600
+                      text-white
+                      hover:bg-blue-700
+                      transition-all
+                    "
+                  >
+                    View / PDF
+                  </button>
+
+                  <button
+                    onClick={() => openDetailsModal(item)}
+                    className="
+                      px-5
+                      py-2
+                      rounded-xl
+                      bg-yellow-500
+                      text-white
+                      hover:bg-yellow-600
+                      transition-all
+                    "
+                  >
+                    More Details
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      );
+    }
+
+    // ================= REQUESTS =================
+
+    if (activeTab === "Requests") {
+      return (
+        <div className="grid gap-6">
+          {requests.length === 0 ? (
+            <p className="text-gray-600 dark:text-gray-300">
+              No access requests found.
+            </p>
+          ) : (
+            requests.map((item) => (
+              <div
+                key={item._id}
+                className="
+                  rounded-3xl
+                  border
+                  bg-white/70
+                  dark:bg-white/5
+                  border-gray-200
+                  dark:border-white/10
+                  backdrop-blur-2xl
+                  shadow-xl
+                  p-6
+                "
+              >
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Request ID: {item.id}
+                </h2>
+
+                <p className="mt-2 text-gray-600 dark:text-gray-300">
+                  Verifier ID: {item.verifier_id}
+                </p>
+
+                <p
+                  className={`mt-2 font-medium ${
+                    item.status === "approved"
+                      ? "text-green-600 dark:text-green-400"
+                      : item.status === "pending"
+                      ? "text-yellow-600 dark:text-yellow-400"
+                      : item.status === "rejected"
+                      ? "text-red-600 dark:text-red-400"
+                      : "text-gray-700 dark:text-white"
+                  }`}
+                >
+                  Status:{" "}
+                  {item.status
+                    ? item.status.charAt(0).toUpperCase() +
+                      item.status.slice(1)
+                    : "Pending"}
+                </p>
+
+                <p className="mt-2 text-gray-600 dark:text-gray-300">
+                  Access From:{" "}
+                  {item.from_time
+                    ? new Date(item.from_time).toLocaleString()
+                    : "N/A"}
+                </p>
+
+                <p className="mt-2 text-gray-600 dark:text-gray-300">
+                  Access To:{" "}
+                  {item.to_time
+                    ? new Date(item.to_time).toLocaleString()
+                    : "N/A"}
+                </p>
+
+                {item.status === "pending" && (
+                  <div className="flex gap-4 mt-6">
+                    <button
+                      onClick={() =>
+                        openModal("approve", item.id)
+                      }
+                      className="
+                        px-5
+                        py-2
+                        rounded-xl
+                        bg-green-600
+                        text-white
+                        hover:bg-green-700
+                        transition-all
+                      "
+                    >
+                      Approve
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        openModal("reject", item.id)
+                      }
+                      className="
+                        px-5
+                        py-2
+                        rounded-xl
+                        bg-red-600
+                        text-white
+                        hover:bg-red-700
+                        transition-all
+                      "
+                    >
+                      Reject
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      );
+    }
+
+    // ================= PROFILE =================
+
+    if (activeTab === "Profile") {
+      return (
+        <div
+          className="
+            rounded-3xl
+            border
+            bg-white/70
+            dark:bg-white/5
+            border-gray-200
+            dark:border-white/10
+            backdrop-blur-2xl
+            shadow-xl
+            p-8
+          "
+        >
+          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+            User Profile
+          </h2>
+
+          <div className="space-y-4 mt-6">
+            <p className="text-gray-700 dark:text-gray-300">
+              <strong>ID:</strong> {profile?.id}
+            </p>
+
+            <p className="text-gray-700 dark:text-gray-300">
+              <strong>Name:</strong> {profile?.name}
+            </p>
+
+            <p className="text-gray-700 dark:text-gray-300">
+              <strong>Email:</strong> {profile?.email}
+            </p>
+          </div>
+        </div>
+      );
+    }
+  };
+
+  return (
+    <>
+      <div className="flex min-h-screen bg-gray-100 dark:bg-[#050816]">
+        <Sidebar
+          title="User Panel"
+          menuItems={menuItems}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          onLogout={() => openModal("logout")}
+        />
+
+        <div className="flex-1 p-8">
+          <div
+            className="
+              rounded-3xl
+              border
+              bg-white/70
+              dark:bg-white/5
+              border-gray-200
+              dark:border-white/10
+              backdrop-blur-2xl
+              shadow-xl
+              p-6
+              mb-8
+            "
+          >
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              {activeTab}
+            </h1>
+
+            <p className="text-gray-600 dark:text-gray-300 mt-2">
+              Manage your certificates, access requests and profile
+            </p>
+          </div>
+
+          {renderContent()}
+        </div>
+
+        <ConfirmModal
+          isOpen={isModalOpen}
+          title={
+            modalType === "approve"
+              ? "Approve Access Request"
+              : modalType === "reject"
+              ? "Reject Access Request"
+              : "Logout"
+          }
+          message={
+            modalType === "approve"
+              ? "Are you sure you want to approve this request?"
+              : modalType === "reject"
+              ? "Are you sure you want to reject this request?"
+              : "Are you sure you want to logout?"
+          }
+          confirmText={
+            modalType === "approve"
+              ? "Approve"
+              : modalType === "reject"
+              ? "Reject"
+              : "Logout"
+          }
+          confirmColor={
+            modalType === "approve"
+              ? "bg-green-600 hover:bg-green-700"
+              : modalType === "reject"
+              ? "bg-red-600 hover:bg-red-700"
+              : "bg-red-600 hover:bg-red-700"
+          }
+          onConfirm={handleConfirm}
+          onCancel={closeModal}
+        />
+      </div>
+
+      {/* DETAILS MODAL */}
+
+      {detailsModalOpen && selectedCertificate && (
+        <div
+          className="
+            fixed
+            inset-0
+            z-50
+            flex
+            items-center
+            justify-center
+            bg-black/40
+            backdrop-blur-sm
+            px-4
+          "
+        >
+          <div
+            className="
+              w-full
+              max-w-lg
+              rounded-3xl
+              border
+              bg-white/90
+              dark:bg-[#0B1120]/90
+              border-gray-200
+              dark:border-white/10
+              backdrop-blur-2xl
+              shadow-2xl
+              p-8
+            "
+          >
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Certificate Details
+            </h2>
+
+            <div className="space-y-4 mt-6 text-gray-700 dark:text-gray-300">
+              <p>
+                <strong>Institute Name:</strong>{" "}
+                {selectedCertificate.institute_name}
+              </p>
+
+              <p>
+                <strong>File Name:</strong>{" "}
+                {selectedCertificate.file_name}
+              </p>
+
+              <p>
+                <strong>Certificate ID:</strong>{" "}
+                {selectedCertificate.id}
+              </p>
+
+              <p>
+                <strong>Institute ID:</strong>{" "}
+                {selectedCertificate.institute_id}
+              </p>
+
+              <p>
+                <strong>Institute Email:</strong>{" "}
+                {selectedCertificate.institute_email}
+              </p>
+            </div>
+
+            <button
+              onClick={closeDetailsModal}
+              className="
+                mt-8
+                w-full
+                py-3
+                rounded-2xl
+                bg-blue-600
+                text-white
+                hover:bg-blue-700
+              "
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+export default UserDashboard;
