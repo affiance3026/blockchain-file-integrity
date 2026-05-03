@@ -1,20 +1,26 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-
+import SearchBox from "../../components/SearchBox";
 import API from "../../api/axios";
 import Sidebar from "../../components/Sidebar";
 import ConfirmModal from "../../components/ConfirmModal";
 
 const VerifierDashboard = () => {
   const navigate = useNavigate();
-
+  const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("Raise Request");
   const [loading, setLoading] = useState(false);
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [requests, setRequests] = useState([]);
   const [profile, setProfile] = useState(null);
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
 
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
   // Raise Request
   const [certificateId, setCertificateId] = useState("");
   const [fromTime, setFromTime] = useState("");
@@ -125,6 +131,36 @@ const VerifierDashboard = () => {
     }
   };
 
+
+  // Update Password
+  const handleUpdatePassword = async () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    try {
+      await API.put("/auth/update-password", {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      });
+
+      toast.success("Password updated successfully");
+
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+
+      setShowPasswordForm(false);
+
+    } catch (error) {
+      toast.error(error?.response?.data?.message);
+    }
+  };
+
+
   // ================= RAISE ACCESS REQUEST =================
 
   const handleRaiseRequest = async (e) => {
@@ -137,6 +173,11 @@ const VerifierDashboard = () => {
 
     if (!fromTime || !toTime) {
       toast.error("Please select from and to time");
+      return;
+    }
+
+    if (fromTime >= toTime) {
+      toast.error("From time must be before To time");
       return;
     }
 
@@ -343,51 +384,73 @@ const VerifierDashboard = () => {
                 </p>
 
                 <p className="mt-2 text-gray-700 dark:text-gray-300">
+                  <strong>User ID:</strong>{" "}
+                  {certificateDetails.user_id}
+                </p>
+
+                <p className="mt-2 text-gray-700 dark:text-gray-300">
                   <strong>Institute Name:</strong>{" "}
                   {certificateDetails.institute_name}
                 </p>
               </div>
 
-              <input
-                type="datetime-local"
-                value={fromTime}
-                onChange={(e) => setFromTime(e.target.value)}
-                onFocus={(e) => e.target.showPicker?.()}
-                className="
-                  w-full
-                  px-4
-                  py-3
-                  rounded-xl
-                  border
-                  bg-white
-                  dark:bg-white/5
-                  border-gray-300
-                  dark:border-gray-700
-                  text-gray-900
-                  dark:text-white
-                "
-              />
+              <div className="flex gap-4">
+                <div className="relative w-1/2">
+                  <label className="ml-1 text-sm text-gray-600 dark:text-gray-300">
+                    Select From Date
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={fromTime}
+                    onChange={(e) => setFromTime(e.target.value)}
+                    onFocus={(e) => e.target.showPicker?.()}
+                    className="
+                      w-full
+                      px-4
+                      py-3
+                      rounded-xl
+                      border
+                      bg-white
+                      dark:bg-white/5
+                      border-gray-300
+                      dark:border-gray-700
+                      text-gray-900
+                      dark:text-white
+                      dark:[color-scheme:dark]
+                    "
+                  />
+                </div>
 
-              <input
-                type="datetime-local"
-                value={toTime}
-                onChange={(e) => setToTime(e.target.value)}
-                onFocus={(e) => e.target.showPicker?.()}
-                className="
-                  w-full
-                  px-4
-                  py-3
-                  rounded-xl
-                  border
-                  bg-white
-                  dark:bg-white/5
-                  border-gray-300
-                  dark:border-gray-700
-                  text-gray-900
-                  dark:text-white
-                "
-              />
 
+
+                <div className="relative w-1/2">
+                  <label className="ml-1 text-sm text-gray-600 dark:text-gray-300">
+                    Select To Date
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={toTime}
+                    onChange={(e) => setToTime(e.target.value)}
+                    onFocus={(e) => e.target.showPicker?.()}
+                    className="
+                      w-full
+                      px-4
+                      py-3
+                      rounded-xl
+                      border
+                      bg-white
+                      dark:bg-white/5
+                      border-gray-300
+                      dark:border-gray-700
+                      text-gray-900
+                      dark:text-white
+                      dark:[color-scheme:dark]
+                    "
+                  />
+                </div>
+              </div>
+
+              
               <button
                 type="submit"
                 className="
@@ -409,7 +472,14 @@ const VerifierDashboard = () => {
     }
 
     // ================= MY REQUESTS =================
+    const filteredRequests = requests.filter((item) => {
+      const q = searchQuery.toLowerCase().trim();
 
+      return (
+        item.id?.toLowerCase().includes(q) ||
+        item.certificate_id?.toLowerCase().includes(q)
+      );
+    });
     if (activeTab === "My Requests") {
       return (
         <div className="grid gap-6">
@@ -418,7 +488,7 @@ const VerifierDashboard = () => {
               No requests found.
             </p>
           ) : (
-            requests.map((item) => (
+            filteredRequests.map((item) => (
               <div
                 key={item._id}
                 className="
@@ -516,16 +586,20 @@ const VerifierDashboard = () => {
 
                     <button
                       onClick={handleVerifyCertificate}
-                      className="
+                      disabled={verifyLoading}
+                      className={`
                         mt-4
                         px-6
                         py-3
                         rounded-xl
-                        bg-green-600
                         text-white
-                        hover:bg-green-700
                         transition-all
-                      "
+                        ${
+                          verifyLoading
+                            ? "bg-green-400 cursor-not-allowed opacity-70"
+                            : "bg-green-600 hover:bg-green-700"
+                        }
+                      `}
                     >
                       {verifyLoading ? "Verifying..." : "Upload & Verify"}
                     </button>
@@ -571,6 +645,98 @@ const VerifierDashboard = () => {
             <p className="text-gray-700 dark:text-gray-300">
               <strong>Email:</strong> {profile?.email}
             </p>
+            <button
+              onClick={() => setShowPasswordForm(!showPasswordForm)}
+              className="mt-6 px-5 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+            >
+              Update Password
+            </button>
+
+            {showPasswordForm && (
+              <div className="mt-6 space-y-4">
+                <input
+                  type="password"
+                  placeholder="Current Password"
+                  value={passwordData.currentPassword}
+                  onChange={(e) =>
+                    setPasswordData({ ...passwordData, currentPassword: e.target.value })
+                  }
+                  className="
+                    w-full
+                    px-4
+                    py-3
+                    rounded-xl
+                    border
+                    outline-none
+                    bg-white
+                    dark:bg-gray-900
+                    border-gray-300
+                    dark:border-gray-700
+                    text-gray-900
+                    dark:text-white
+                    placeholder:text-gray-500
+                    dark:placeholder:text-gray-400
+                  "
+                />
+
+                <input
+                  type="password"
+                  placeholder="New Password"
+                  value={passwordData.newPassword}
+                  onChange={(e) =>
+                    setPasswordData({ ...passwordData, newPassword: e.target.value })
+                  }
+                  className="
+                    w-full
+                    px-4
+                    py-3
+                    rounded-xl
+                    border
+                    outline-none
+                    bg-white
+                    dark:bg-gray-900
+                    border-gray-300
+                    dark:border-gray-700
+                    text-gray-900
+                    dark:text-white
+                    placeholder:text-gray-500
+                    dark:placeholder:text-gray-400
+                  "
+                />
+
+                <input
+                  type="password"
+                  placeholder="Confirm Password"
+                  value={passwordData.confirmPassword}
+                  onChange={(e) =>
+                    setPasswordData({ ...passwordData, confirmPassword: e.target.value })
+                  }
+                  className="
+                    w-full
+                    px-4
+                    py-3
+                    rounded-xl
+                    border
+                    outline-none
+                    bg-white
+                    dark:bg-gray-900
+                    border-gray-300
+                    dark:border-gray-700
+                    text-gray-900
+                    dark:text-white
+                    placeholder:text-gray-500
+                    dark:placeholder:text-gray-400
+                  "
+                />
+
+                <button
+                  onClick={handleUpdatePassword}
+                  className="w-full py-3 rounded-xl bg-green-600 text-white hover:bg-green-700"
+                >
+                  Save Password
+                </button>
+              </div>
+            )}
           </div>
         </div>
       );
@@ -578,7 +744,7 @@ const VerifierDashboard = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-100 dark:bg-[#050816]">
+    <div className="flex bg-gray-100 dark:bg-[#050816]">
       <Sidebar
         title="Verifier Panel"
         menuItems={menuItems}
@@ -587,7 +753,7 @@ const VerifierDashboard = () => {
         onLogout={() => openModal("logout")}
       />
 
-      <div className="flex-1 p-8">
+      <div className="flex-1 p-8 ml-[280px] h-screen overflow-y-auto">
         <div
           className="
             rounded-3xl
@@ -605,10 +771,18 @@ const VerifierDashboard = () => {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             {activeTab}
           </h1>
-
-          <p className="text-gray-600 dark:text-gray-300 mt-2">
-            Manage certificate verification and access requests
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-gray-600 dark:text-gray-300 mt-2">
+              Manage certificate verification and access requests
+            </p>
+              {activeTab === "My Requests" && (
+                <SearchBox
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  placeholder="Search by Request ID or Certificate ID"
+                />
+              )}
+          </div>
         </div>
 
         {renderContent()}

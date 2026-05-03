@@ -40,16 +40,28 @@ exports.requestAccess = async (req, res) => {
         message: "Certificate not found"
       });
     }
+
+
+    const now = new Date();
     const existingRequest = await AccessRequest.findOne({
       certificate_id,
       verifier_id,
       user_id,
-      status: "pending"
+      $or: [
+        {
+          status: "pending"
+        },
+        {
+          status: "approved",
+          from_time: { $lte: now },
+          to_time: { $gte: now }
+        }
+      ]
     });
 
     if (existingRequest) {
       return res.status(400).json({
-        message: "Access request already pending for this certificate"
+        message: "Active or pending access request already exists for this certificate"
       });
     }
     // Generate request ID

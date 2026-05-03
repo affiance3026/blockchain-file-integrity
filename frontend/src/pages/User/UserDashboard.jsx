@@ -1,16 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import toast from "react-hot-toast";
 import API from "../../api/axios";
 import Sidebar from "../../components/Sidebar";
 import ConfirmModal from "../../components/ConfirmModal";
-
+import SearchBox from "../../components/SearchBox";
 const UserDashboard = () => {
   const navigate = useNavigate();
-
+  const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("Issued Documents");
   const [loading, setLoading] = useState(false);
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
 
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
   const [documents, setDocuments] = useState([]);
   const [requests, setRequests] = useState([]);
   const [profile, setProfile] = useState(null);
@@ -66,6 +72,35 @@ const UserDashboard = () => {
       console.error(error);
     }
   };
+  // Update Password
+  const handleUpdatePassword = async () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    try {
+      await API.put("/auth/update-password", {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      });
+
+      toast.success("Password updated successfully");
+
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+
+      setShowPasswordForm(false);
+
+    } catch (error) {
+      toast.error(error?.response?.data?.message);
+    }
+  };
+
+
 
   // ================= DOWNLOAD DOCUMENT =================
 
@@ -170,7 +205,14 @@ const UserDashboard = () => {
     }
 
     // ================= ISSUED DOCUMENTS =================
+    const filteredDocuments = documents.filter((item) => {
+      const q = searchQuery.toLowerCase().trim();
 
+      return (
+        item.institute_name?.toLowerCase().includes(q) ||
+        item.file_name?.toLowerCase().includes(q)
+      );
+    });
     if (activeTab === "Issued Documents") {
       return (
         <div className="grid gap-6">
@@ -179,7 +221,7 @@ const UserDashboard = () => {
               No documents found.
             </p>
           ) : (
-            documents.map((item) => (
+            filteredDocuments.map((item) => (
               <div
                 key={item._id}
                 className="
@@ -195,14 +237,14 @@ const UserDashboard = () => {
                 "
               >
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  {item.institute_name || "Institute Name"}
+                  {item.file_name}
                 </h2>
 
                 <p className="mt-2 text-gray-600 dark:text-gray-300">
-                  {item.file_name}
+                  {item.institute_name || "Institute Name"}
                 </p>
 
-                <div className="flex gap-4 mt-6">
+                <div className="flex gap-4 mt-3">
                   <button
                     onClick={() => handleDownload(item.file_url)}
                     className="
@@ -215,7 +257,7 @@ const UserDashboard = () => {
                       transition-all
                     "
                   >
-                    View / PDF
+                    View
                   </button>
 
                   <button
@@ -241,7 +283,15 @@ const UserDashboard = () => {
     }
 
     // ================= REQUESTS =================
+    const filteredRequests = requests.filter((item) => {
+      const q = searchQuery.toLowerCase().trim();
 
+      return (
+        item.id?.toLowerCase().includes(q) ||
+        item.verifier_name?.toLowerCase().includes(q) ||
+        item.verifier_id?.toLowerCase().includes(q)
+      );
+    });
     if (activeTab === "Requests") {
       return (
         <div className="grid gap-6">
@@ -250,7 +300,7 @@ const UserDashboard = () => {
               No access requests found.
             </p>
           ) : (
-            requests.map((item) => (
+            filteredRequests.map((item) => (
               <div
                 key={item._id}
                 className="
@@ -266,8 +316,12 @@ const UserDashboard = () => {
                 "
               >
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  Request ID: {item.id}
+                  Verifier Name: {item.verifier_name}
                 </h2>
+
+                <p className="mt-2 text-gray-600 dark:text-gray-300">
+                  Request ID: {item.id}
+                </p>
 
                 <p className="mt-2 text-gray-600 dark:text-gray-300">
                   Verifier ID: {item.verifier_id}
@@ -382,6 +436,98 @@ const UserDashboard = () => {
             <p className="text-gray-700 dark:text-gray-300">
               <strong>Email:</strong> {profile?.email}
             </p>
+            <button
+              onClick={() => setShowPasswordForm(!showPasswordForm)}
+              className="mt-6 px-5 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+            >
+              Update Password
+            </button>
+
+            {showPasswordForm && (
+              <div className="mt-6 space-y-4">
+                <input
+                  type="password"
+                  placeholder="Current Password"
+                  value={passwordData.currentPassword}
+                  onChange={(e) =>
+                    setPasswordData({ ...passwordData, currentPassword: e.target.value })
+                  }
+                  className="
+                    w-full
+                    px-4
+                    py-3
+                    rounded-xl
+                    border
+                    outline-none
+                    bg-white
+                    dark:bg-gray-900
+                    border-gray-300
+                    dark:border-gray-700
+                    text-gray-900
+                    dark:text-white
+                    placeholder:text-gray-500
+                    dark:placeholder:text-gray-400
+                  "
+                />
+
+                <input
+                  type="password"
+                  placeholder="New Password"
+                  value={passwordData.newPassword}
+                  onChange={(e) =>
+                    setPasswordData({ ...passwordData, newPassword: e.target.value })
+                  }
+                  className="
+                    w-full
+                    px-4
+                    py-3
+                    rounded-xl
+                    border
+                    outline-none
+                    bg-white
+                    dark:bg-gray-900
+                    border-gray-300
+                    dark:border-gray-700
+                    text-gray-900
+                    dark:text-white
+                    placeholder:text-gray-500
+                    dark:placeholder:text-gray-400
+                  "
+                />
+
+                <input
+                  type="password"
+                  placeholder="Confirm Password"
+                  value={passwordData.confirmPassword}
+                  onChange={(e) =>
+                    setPasswordData({ ...passwordData, confirmPassword: e.target.value })
+                  }
+                  className="
+                    w-full
+                    px-4
+                    py-3
+                    rounded-xl
+                    border
+                    outline-none
+                    bg-white
+                    dark:bg-gray-900
+                    border-gray-300
+                    dark:border-gray-700
+                    text-gray-900
+                    dark:text-white
+                    placeholder:text-gray-500
+                    dark:placeholder:text-gray-400
+                  "
+                />
+
+                <button
+                  onClick={handleUpdatePassword}
+                  className="w-full py-3 rounded-xl bg-green-600 text-white hover:bg-green-700"
+                >
+                  Save Password
+                </button>
+              </div>
+            )}
           </div>
         </div>
       );
@@ -390,7 +536,7 @@ const UserDashboard = () => {
 
   return (
     <>
-      <div className="flex min-h-screen bg-gray-100 dark:bg-[#050816]">
+      <div className="flex bg-gray-100 dark:bg-[#050816]">
         <Sidebar
           title="User Panel"
           menuItems={menuItems}
@@ -399,7 +545,7 @@ const UserDashboard = () => {
           onLogout={() => openModal("logout")}
         />
 
-        <div className="flex-1 p-8">
+        <div className="flex-1 p-8 ml-[280px] h-screen overflow-y-auto">
           <div
             className="
               rounded-3xl
@@ -417,10 +563,18 @@ const UserDashboard = () => {
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
               {activeTab}
             </h1>
-
-            <p className="text-gray-600 dark:text-gray-300 mt-2">
-              Manage your certificates, access requests and profile
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-gray-600 dark:text-gray-300 mt-2">
+                Manage your certificates, access requests and profile
+              </p>
+              {activeTab !== "Profile" && (
+                <SearchBox
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  placeholder="Search"
+                />
+              )}
+            </div>
           </div>
 
           {renderContent()}

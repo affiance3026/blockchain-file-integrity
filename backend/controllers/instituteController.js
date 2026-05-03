@@ -66,7 +66,7 @@ exports.raiseApprovalRequest = async (req, res) => {
 exports.issueCertificate = async (req, res) => {
   try {
     const institute_id = req.user.id;
-    const { user_id } = req.body;
+    const { user_id, file_name } = req.body;
 
     if (!user_id) {
       return res.status(400).json({
@@ -105,7 +105,17 @@ exports.issueCertificate = async (req, res) => {
         message: "Certificate file is required",
       });
     }
+    // duplicate certificate
+    const existingCertificate = await Certificate.findOne({
+      user_id,
+      file_name: req.body.file_name,
+    });
 
+    if (existingCertificate) {
+      return res.status(400).json({
+        message: `${file_name || "This certificate"} already issued for this user`
+      });
+    }
     const cid = await uploadToIPFS(
       req.file.buffer,
       req.file.originalname

@@ -12,7 +12,10 @@ const Sidebar = ({
     <div
       className="
         w-[280px]
-        min-h-screen
+        h-screen
+        fixed
+        left-0
+        top-0
         border-r
         border-gray-200
         dark:border-white/10

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import SearchBox from "../../components/SearchBox";
 import API from "../../api/axios";
 import Sidebar from "../../components/Sidebar";
 import ConfirmModal from "../../components/ConfirmModal";
@@ -12,7 +13,13 @@ const InstituteDashboard = () => {
   const [userChecking, setUserChecking] = useState(false);
   const [userDetails, setUserDetails] = useState(null);
   const fileInputRef = useRef(null);
-
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
   const [fileName, setFileName] = useState("");
   const [certificateFile, setCertificateFile] = useState(null);
   const [activeTab, setActiveTab] = useState("Issue Certificate");
@@ -156,7 +163,38 @@ const InstituteDashboard = () => {
       setApprovalLoading(false);
     }
   };
+  // Update Password
+  const handleUpdatePassword = async () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error("Confirm Password do not match");
+      return;
+    }
 
+    try {
+      await API.put("/auth/update-password", {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      });
+
+      toast.success("Password updated successfully");
+
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+
+      setShowPasswordForm(false);
+
+    } catch (error) {
+      toast.error(error?.response?.data?.message);
+    }
+  };
+  // View Certificate
+  const handleDownload = (cid) => {
+    const fileUrl = `https://gateway.pinata.cloud/ipfs/${cid}`;
+    window.open(fileUrl, "_blank");
+  };
   // ================= ISSUE CERTIFICATE =================
 
   const handleIssueCertificate = async (e) => {
@@ -471,19 +509,19 @@ const InstituteDashboard = () => {
                   dark:text-white
                 "
               >
-                <option value="">Select Certificate Type</option>
+                <option className="bg-white text-black dark:bg-gray-800 dark:text-white" value="">Select Certificate Type</option>
 
-                <option value="10th Marksheet">10th Marksheet</option>
-                <option value="12th Marksheet">12th Marksheet</option>
+                <option className="bg-white text-black dark:bg-gray-800 dark:text-white" value="10th Marksheet">10th Marksheet</option>
+                <option className="bg-white text-black dark:bg-gray-800 dark:text-white" value="12th Marksheet">12th Marksheet</option>
 
-                <option value="Degree Certificate - Sem 1">Degree Certificate - Sem 1</option>
-                <option value="Degree Certificate - Sem 2">Degree Certificate - Sem 2</option>
-                <option value="Degree Certificate - Sem 3">Degree Certificate - Sem 3</option>
-                <option value="Degree Certificate - Sem 4">Degree Certificate - Sem 4</option>
-                <option value="Degree Certificate - Sem 5">Degree Certificate - Sem 5</option>
-                <option value="Degree Certificate - Sem 6">Degree Certificate - Sem 6</option>
+                <option className="bg-white text-black dark:bg-gray-800 dark:text-white" value="Degree Certificate - Sem 1">Degree Certificate - Sem 1</option>
+                <option className="bg-white text-black dark:bg-gray-800 dark:text-white" value="Degree Certificate - Sem 2">Degree Certificate - Sem 2</option>
+                <option className="bg-white text-black dark:bg-gray-800 dark:text-white" value="Degree Certificate - Sem 3">Degree Certificate - Sem 3</option>
+                <option className="bg-white text-black dark:bg-gray-800 dark:text-white" value="Degree Certificate - Sem 4">Degree Certificate - Sem 4</option>
+                <option className="bg-white text-black dark:bg-gray-800 dark:text-white" value="Degree Certificate - Sem 5">Degree Certificate - Sem 5</option>
+                <option className="bg-white text-black dark:bg-gray-800 dark:text-white" value="Degree Certificate - Sem 6">Degree Certificate - Sem 6</option>
 
-                <option value="Provisional Degree Certificate">Provisional Degree Certificate</option>
+                <option className="bg-white text-black dark:bg-gray-800 dark:text-white" value="Provisional Degree Certificate">Provisional Degree Certificate</option>
               </select>
 
               <p className="text-gray-700 dark:text-gray-300 font-medium">
@@ -555,7 +593,15 @@ const InstituteDashboard = () => {
     }
 
     // ================= ISSUED CERTIFICATES =================
+    const filteredCertificates = issuedCertificates.filter((item) => {
+      const q = searchQuery.toLowerCase();
 
+      return (
+        item.id?.toLowerCase().includes(q) ||
+        item.user_id?.toLowerCase().includes(q) ||
+        item.file_name?.toLowerCase().includes(q)
+      );
+    });
     if (activeTab === "Issued Certificates") {
       return (
         <div className="grid gap-6">
@@ -564,7 +610,7 @@ const InstituteDashboard = () => {
               No certificates issued yet.
             </p>
           ) : (
-            issuedCertificates.map((item) => (
+            filteredCertificates.map((item) => (
               <div
                 key={item._id}
                 className="
@@ -591,7 +637,22 @@ const InstituteDashboard = () => {
                   User ID: {item.user_id}
                 </p>
 
-                
+                <div className="flex gap-4 mt-3">
+                  <button
+                    onClick={() => handleDownload(item.file_url)}
+                    className="
+                      px-5
+                      py-2
+                      rounded-xl
+                      bg-blue-600
+                      text-white
+                      hover:bg-blue-700
+                      transition-all
+                    "
+                  >
+                    View
+                  </button>
+                </div>
               </div>
             ))
           )}
@@ -640,7 +701,98 @@ const InstituteDashboard = () => {
                 profile.status.slice(1)
               : "Not Raised"}
             </p>
+            <button
+              onClick={() => setShowPasswordForm(!showPasswordForm)}
+              className="mt-6 px-5 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+            >
+              Update Password
+            </button>
 
+            {showPasswordForm && (
+              <div className="mt-6 space-y-4">
+                <input
+                  type="password"
+                  placeholder="Current Password"
+                  value={passwordData.currentPassword}
+                  onChange={(e) =>
+                    setPasswordData({ ...passwordData, currentPassword: e.target.value })
+                  }
+                  className="
+                    w-full
+                    px-4
+                    py-3
+                    rounded-xl
+                    border
+                    outline-none
+                    bg-white
+                    dark:bg-gray-900
+                    border-gray-300
+                    dark:border-gray-700
+                    text-gray-900
+                    dark:text-white
+                    placeholder:text-gray-500
+                    dark:placeholder:text-gray-400
+                  "
+                />
+
+                <input
+                  type="password"
+                  placeholder="New Password"
+                  value={passwordData.newPassword}
+                  onChange={(e) =>
+                    setPasswordData({ ...passwordData, newPassword: e.target.value })
+                  }
+                  className="
+                    w-full
+                    px-4
+                    py-3
+                    rounded-xl
+                    border
+                    outline-none
+                    bg-white
+                    dark:bg-gray-900
+                    border-gray-300
+                    dark:border-gray-700
+                    text-gray-900
+                    dark:text-white
+                    placeholder:text-gray-500
+                    dark:placeholder:text-gray-400
+                  "
+                />
+
+                <input
+                  type="password"
+                  placeholder="Confirm Password"
+                  value={passwordData.confirmPassword}
+                  onChange={(e) =>
+                    setPasswordData({ ...passwordData, confirmPassword: e.target.value })
+                  }
+                  className="
+                    w-full
+                    px-4
+                    py-3
+                    rounded-xl
+                    border
+                    outline-none
+                    bg-white
+                    dark:bg-gray-900
+                    border-gray-300
+                    dark:border-gray-700
+                    text-gray-900
+                    dark:text-white
+                    placeholder:text-gray-500
+                    dark:placeholder:text-gray-400
+                  "
+                />
+
+                <button
+                  onClick={handleUpdatePassword}
+                  className="w-full py-3 rounded-xl bg-green-600 text-white hover:bg-green-700"
+                >
+                  Save Password
+                </button>
+              </div>
+            )}
             
           </div>
         </div>
@@ -649,7 +801,7 @@ const InstituteDashboard = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-100 dark:bg-[#050816]">
+    <div className="flex bg-gray-100 dark:bg-[#050816]">
       <Sidebar
         title="Institute Panel"
         menuItems={menuItems}
@@ -658,7 +810,7 @@ const InstituteDashboard = () => {
         onLogout={() => openModal("logout")}
       />
 
-      <div className="flex-1 p-8">
+      <div className="flex-1 p-8 ml-[280px] h-screen overflow-y-auto">
         <div
           className="
             rounded-3xl
@@ -676,10 +828,18 @@ const InstituteDashboard = () => {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             {activeTab}
           </h1>
-
-          <p className="text-gray-600 dark:text-gray-300 mt-2">
-            Manage institute approval and certificate issuing workflow
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-gray-600 dark:text-gray-300 mt-2">
+              Manage institute approval and certificate issuing workflow
+            </p>
+            {activeTab === "Issued Certificates" && (
+              <SearchBox
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Search"
+              />
+            )}
+          </div>
         </div>
 
         {renderContent()}

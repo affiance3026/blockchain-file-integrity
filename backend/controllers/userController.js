@@ -1,7 +1,7 @@
 const User = require("../models/user.model");
 const Certificate = require("../models/certificate.model");
 const AccessRequest = require("../models/accessRequest.model");
-
+const Verifier = require("../models/verifier.model");
 
 // ================= GET ISSUED DOCUMENTS =================
 
@@ -52,10 +52,22 @@ exports.getAccessRequests = async (req, res) => {
     const requests = await AccessRequest.find({
       user_id: userId
     });
+    
+    const updatedRequests = await Promise.all(
+      requests.map(async (reqItem) => {
+        const verifier = await Verifier.findOne({
+          id: reqItem.verifier_id
+        });
 
+        return {
+          ...reqItem._doc,
+          verifier_name: verifier?.name || "N/A"
+        };
+      })
+    );
     res.status(200).json({
       message: "Access requests fetched successfully",
-      data: requests
+      data: updatedRequests
     });
 
   } catch (error) {

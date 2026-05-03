@@ -221,3 +221,82 @@ exports.login = async (req, res) => {
     });
   }
 };
+
+// ================= UPDATE PASSWORD (ALL ROLES) =================
+
+exports.updatePassword = async (req, res) => {
+  try {
+    const { id, role } = req.user;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        message: "All fields are required",
+      });
+    }
+
+    let Model;
+
+    // ROLE → MODEL mapping (your exact system)
+    switch (role) {
+      case "user":
+        Model = User;
+        break;
+      case "institute":
+        Model = Institute;
+        break;
+      case "verifier":
+        Model = Verifier;
+        break;
+      default:
+        return res.status(403).json({
+          message: "Invalid role",
+        });
+    }
+
+    const account = await Model.findOne({ id });
+
+    if (!account) {
+      return res.status(404).json({
+        message: "Account not found",
+      });
+    }
+
+    const isMatch = await bcrypt.compare(
+      currentPassword,
+      account.password
+    );
+
+    if (!isMatch) {
+      return res.status(400).json({
+        message: "Current password is incorrect",
+      });
+    }
+
+    
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
+
+    if (!passwordRegex.test(newPassword)) {
+      return res.status(400).json({
+        message:
+          "Password must be at least 8 characters and include uppercase, lowercase, number, and special character",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    account.password = hashedPassword;
+    await account.save();
+
+    return res.status(200).json({
+      message: "Password updated successfully",
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Failed to update password",
+    });
+  }
+};

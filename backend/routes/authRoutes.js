@@ -1,9 +1,10 @@
 const express = require("express");
 const router = express.Router();
-
+const authMiddleware = require("../middleware/authMiddleware");
 const {
   register,
-  login
+  login,
+  updatePassword
 } = require("../controllers/authController");
 
 
@@ -20,4 +21,10 @@ router.post(
   login
 );
 
+//update password
+router.put(
+  "/update-password",
+  authMiddleware,
+  updatePassword
+);
 module.exports = router;

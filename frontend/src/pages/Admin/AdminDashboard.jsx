@@ -4,10 +4,10 @@ import toast from "react-hot-toast";
 import API from "../../api/axios";
 import Sidebar from "../../components/Sidebar";
 import ConfirmModal from "../../components/ConfirmModal";
-
+import SearchBox from "../../components/SearchBox";
 const AdminDashboard = () => {
   const navigate = useNavigate();
-
+  const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("Pending Requests");
   const [pendingInstitutes, setPendingInstitutes] = useState([]);
   const [approvedInstitutes, setApprovedInstitutes] = useState([]);
@@ -145,7 +145,14 @@ const AdminDashboard = () => {
     }
 
     // ================= PENDING =================
+    const filteredPending = pendingInstitutes.filter((item) => {
+      const q = searchQuery.toLowerCase().trim();
 
+      return (
+        item.name?.toLowerCase().includes(q) ||
+        item.id?.toLowerCase().includes(q)
+      );
+    });
     if (activeTab === "Pending Requests") {
       return (
         <div className="grid gap-6">
@@ -154,7 +161,7 @@ const AdminDashboard = () => {
               No pending institute requests.
             </p>
           ) : (
-            pendingInstitutes.map((item) => (
+            filteredPending.map((item) => (
               <div
                 key={item._id}
                 className="
@@ -259,7 +266,14 @@ const AdminDashboard = () => {
     }
 
     // ================= APPROVED =================
+    const filteredApproved = approvedInstitutes.filter((item) => {
+      const q = searchQuery.toLowerCase().trim();
 
+      return (
+        item.name?.toLowerCase().includes(q) ||
+        item.id?.toLowerCase().includes(q)
+      );
+    });
     if (activeTab === "Approved Institutes") {
       return (
         <div className="grid gap-6">
@@ -268,7 +282,7 @@ const AdminDashboard = () => {
               No approved institutes found.
             </p>
           ) : (
-            approvedInstitutes.map((item) => (
+            filteredApproved.map((item) => (
               <div
                 key={item._id}
                 className="
@@ -303,7 +317,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-100 dark:bg-[#050816]">
+    <div className="flex bg-gray-100 dark:bg-[#050816]">
       <Sidebar
         title="Admin Panel"
         menuItems={menuItems}
@@ -312,7 +326,7 @@ const AdminDashboard = () => {
         onLogout={() => openModal("logout")}
       />
 
-      <div className="flex-1 p-8">
+      <div className="flex-1 p-8 ml-[280px] h-screen overflow-y-auto">
         {/* Top Section */}
         <div
           className="
@@ -331,10 +345,16 @@ const AdminDashboard = () => {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             {activeTab}
           </h1>
-
-          <p className="text-gray-600 dark:text-gray-300 mt-2">
-            Manage institute approvals and verification flow
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-gray-600 dark:text-gray-300 mt-2">
+              Manage institute approvals and verification flow
+            </p>
+              <SearchBox
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Search by name or ID"
+            />
+          </div>
         </div>
 
         {renderContent()}
