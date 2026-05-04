@@ -2,7 +2,7 @@ require("dotenv").config();
 
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-
+const crypto = require("crypto");
 const User = require("../models/user.model");
 const Institute = require("../models/institute.model");
 const Verifier = require("../models/verifier.model");
@@ -297,6 +297,234 @@ exports.updatePassword = async (req, res) => {
     console.error(error);
     return res.status(500).json({
       message: "Failed to update password",
+    });
+  }
+};
+
+// ================= FORGOT PASSWORD (SEND OTP) =================
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email, role } = req.body;
+
+    if (!email || !role) {
+      return res.status(400).json({
+        message: "Email and role are required"
+      });
+    }
+
+    let Model;
+
+    switch (role) {
+      case "user":
+        Model = User;
+        break;
+      case "institute":
+        Model = Institute;
+        break;
+      case "verifier":
+        Model = Verifier;
+        break;
+      default:
+        return res.status(400).json({
+          message: "Invalid role"
+        });
+    }
+
+    const account = await Model.findOne({ email });
+
+    if (!account) {
+      return res.status(404).json({
+        message: "Account not found"
+      });
+    }
+
+    // 🔥 Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // ⏳ Expiry: 5 minutes
+    const expiry = Date.now() + 5 * 60 * 1000;
+
+    account.otp = otp;
+    account.otpExpires = expiry;
+
+    await account.save();
+
+    
+    const sendEmail = require("../utils/sendEmail");
+
+    await sendEmail(
+      email,
+      "Your OTP for Password Reset",
+      `Your OTP is: ${otp}. It will expire in 5 minutes.`
+    );
+
+    return res.status(200).json({
+      message: "OTP sent successfully"
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Failed to send OTP"
+    });
+  }
+};
+
+
+// ================= VERIFY OTP =================
+
+exports.verifyOtp = async (req, res) => {
+  try {
+    const { email, otp, role } = req.body;
+
+    if (!email || !otp || !role) {
+      return res.status(400).json({
+        message: "All fields are required"
+      });
+    }
+
+    let Model;
+
+    switch (role) {
+      case "user":
+        Model = User;
+        break;
+      case "institute":
+        Model = Institute;
+        break;
+      case "verifier":
+        Model = Verifier;
+        break;
+      default:
+        return res.status(400).json({
+          message: "Invalid role"
+        });
+    }
+
+    const account = await Model.findOne({ email });
+
+    if (!account) {
+      return res.status(404).json({
+        message: "Account not found"
+      });
+    }
+
+    // ❌ No OTP stored
+    if (!account.otp || !account.otpExpires) {
+      return res.status(400).json({
+        message: "No OTP found"
+      });
+    }
+
+    // ❌ OTP expired
+    if (account.otpExpires < Date.now()) {
+      return res.status(400).json({
+        message: "OTP expired"
+      });
+    }
+
+    // ❌ OTP mismatch
+    if (account.otp !== otp) {
+      return res.status(400).json({
+        message: "Invalid OTP"
+      });
+    }
+
+    
+    account.otpVerified = true;
+
+    await account.save();
+
+    return res.status(200).json({
+      message: "OTP verified successfully"
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "OTP verification failed"
+    });
+  }
+};
+
+// ================= RESET PASSWORD =================
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { email, password, role } = req.body;
+
+    if (!email || !password || !role) {
+      return res.status(400).json({
+        message: "All fields are required"
+      });
+    }
+
+    let Model;
+
+    switch (role) {
+      case "user":
+        Model = User;
+        break;
+      case "institute":
+        Model = Institute;
+        break;
+      case "verifier":
+        Model = Verifier;
+        break;
+      default:
+        return res.status(400).json({
+          message: "Invalid role"
+        });
+    }
+
+    const account = await Model.findOne({ email });
+
+    if (!account) {
+      return res.status(404).json({
+        message: "Account not found"
+      });
+    }
+
+
+    if (!account.otpVerified) {
+      return res.status(400).json({
+        message: "OTP not verified"
+      });
+    }
+
+    // 🔒 OPTIONAL: add password validation (same as register)
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
+
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({
+        message:
+          "Password must be at least 8 characters and include uppercase, lowercase, number, and special character"
+      });
+    }
+
+    const bcrypt = require("bcrypt");
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    account.password = hashedPassword;
+
+    // ✅ clear OTP + reset flag
+    account.otp = undefined;
+    account.otpExpires = undefined;
+    account.otpVerified = false;
+
+    await account.save();
+
+    return res.status(200).json({
+      message: "Password reset successful"
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Reset failed"
     });
   }
 };

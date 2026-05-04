@@ -6,6 +6,12 @@ const instituteSchema = new mongoose.Schema({
   email: String,
   password: String,
   cid: String,
+  otp: String,
+  otpExpires: Date,
+  otpVerified: {
+  type: Boolean,
+  default: false
+  },
   status: {
     type: String,
     default: "not raised"

@@ -1,12 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import {
-  User,
-  Mail,
-  Lock,
-  Users,
-  KeyRound
-} from "lucide-react";
+import { User, Mail, Lock, Users, KeyRound } from "lucide-react";
 
 import API from "../../api/axios";
 import ThemeToggle from "../../components/ThemeToggle";

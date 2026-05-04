@@ -1,11 +1,7 @@
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, Link } from "react-router-dom";
-import {
-  Mail,
-  Lock,
-  Users
-} from "lucide-react";
+import { Mail, Lock, Users } from "lucide-react";
 
 import API from "../../api/axios";
 import ThemeToggle from "../../components/ThemeToggle";
@@ -383,8 +379,17 @@ const Login = () => {
                 {loading ? "Logging in..." : "Login"}
               </button>
             </form>
-
+            
             <p className="text-center mt-6 text-gray-600 dark:text-gray-300">
+              <Link
+                to="/forgot-password"
+                className="font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+              >
+                Forgot Password?
+              </Link>
+            </p>
+
+            <p className="text-center mt-2 text-gray-600 dark:text-gray-300">
               Don’t have an account?{" "}
               <Link
                 to="/register"

@@ -7,7 +7,7 @@ import {
 import { Toaster } from "react-hot-toast";
 import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
-
+import ForgotPassword from "./pages/Auth/ForgotPassword";
 import AdminDashboard from "./pages/Admin/AdminDashboard";
 import InstituteDashboard from "./pages/Institute/InstituteDashboard";
 import UserDashboard from "./pages/User/UserDashboard";
@@ -24,6 +24,7 @@ function App() {
         {/* Auth Routes */}
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* Admin Dashboard */}
         <Route

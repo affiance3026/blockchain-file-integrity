@@ -4,6 +4,9 @@ const authMiddleware = require("../middleware/authMiddleware");
 const {
   register,
   login,
+  forgotPassword,
+  verifyOtp,
+  resetPassword,
   updatePassword
 } = require("../controllers/authController");
 
@@ -19,6 +22,24 @@ router.post(
 router.post(
   "/login",
   login
+);
+
+//forgot password
+router.post(
+  "/forgot-password", 
+  forgotPassword
+);
+
+//verify otp
+router.post(
+  "/verify-otp",
+  verifyOtp
+);
+
+//reset otp
+router.post(
+  "/reset-password", 
+  resetPassword
 );
 
 //update password
