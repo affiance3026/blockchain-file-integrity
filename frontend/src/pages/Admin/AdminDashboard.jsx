@@ -105,7 +105,10 @@ const AdminDashboard = () => {
   // ================= LOGOUT =================
 
   const handleLogout = () => {
-    localStorage.clear();
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("userName");
     navigate("/");
     closeModal();
   };
@@ -352,7 +355,7 @@ const AdminDashboard = () => {
               <SearchBox
               value={searchQuery}
               onChange={setSearchQuery}
-              placeholder="Search by name or ID"
+              placeholder="Search"
             />
           </div>
         </div>

@@ -55,13 +55,26 @@ exports.getAccessRequests = async (req, res) => {
     
     const updatedRequests = await Promise.all(
       requests.map(async (reqItem) => {
+        // Fetch verifier
         const verifier = await Verifier.findOne({
           id: reqItem.verifier_id
         });
 
+        // Fetch certificate/document
+        const certificate = await Certificate.findOne({
+          id: reqItem.certificate_id
+        });
+
         return {
           ...reqItem._doc,
-          verifier_name: verifier?.name || "N/A"
+
+          // Verifier Details
+          verifier_name: verifier?.name || "N/A",
+          verifier_email: verifier?.email || "N/A",
+
+          // Certificate Details
+          file_name: certificate?.file_name || "N/A",
+          certificate_id: certificate?.id || "N/A"
         };
       })
     );

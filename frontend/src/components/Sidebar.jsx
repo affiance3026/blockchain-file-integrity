@@ -1,13 +1,15 @@
 import React from "react";
-import { LogOut } from "lucide-react";
-
-const Sidebar = ({
+import { LogOut, Moon, Sun } from "lucide-react";
+import { useTheme } from "../context/ThemeContext";
+const Sidebar = (
+  {
   title,
   menuItems,
   activeTab,
   setActiveTab,
   onLogout,
 }) => {
+  const { darkMode, toggleTheme } = useTheme();
   return (
     <div
       className="
@@ -74,27 +76,58 @@ const Sidebar = ({
         </div>
       </div>
 
-      {/* Logout */}
-      <button
-        onClick={onLogout}
-        className="
-          flex
-          items-center
-          gap-3
-          px-5
-          py-3
-          rounded-2xl
-          text-red-500
-          hover:bg-red-50
-          dark:hover:bg-red-500/10
-          transition-all
-          duration-300
-          font-medium
-        "
-      >
-        <LogOut size={18} />
-        Logout
-      </button>
+
+      {/* Bottom Section */}
+      <div className="space-y-3">
+
+        {/* Theme Toggle */}
+        <button
+          onClick={toggleTheme}
+          className="
+            w-full
+            flex
+            items-center
+            gap-3
+            px-5
+            py-3
+            rounded-2xl
+            text-gray-700
+            dark:text-gray-200
+            hover:bg-gray-100
+            dark:hover:bg-white/10
+            transition-all
+            duration-300
+            font-medium
+          "
+        >
+          {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+
+          {darkMode ? "Light Mode" : "Dark Mode"}
+        </button>
+        
+        {/* Logout */}
+        <button
+          onClick={onLogout}
+          className="
+            w-full
+            flex
+            items-center
+            gap-3
+            px-5
+            py-3
+            rounded-2xl
+            text-red-500
+            hover:bg-red-50
+            dark:hover:bg-red-500/10
+            transition-all
+            duration-300
+            font-medium
+          "
+        >
+          <LogOut size={18} />
+          Logout
+        </button>
+      </div>
     </div>
   );
 };

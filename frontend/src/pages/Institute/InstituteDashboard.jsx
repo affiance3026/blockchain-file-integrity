@@ -10,6 +10,8 @@ const InstituteDashboard = () => {
   const navigate = useNavigate();
   const [userId, setUserId] = useState("");
   const [userVerified, setUserVerified] = useState(false);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [selectedCertificate, setSelectedCertificate] = useState(null);
   const [userChecking, setUserChecking] = useState(false);
   const [userDetails, setUserDetails] = useState(null);
   const fileInputRef = useRef(null);
@@ -123,6 +125,18 @@ const InstituteDashboard = () => {
     } catch (error) {
       console.error(error);
     }
+  };
+
+  // ================= DETAILS MODAL =================
+
+  const openDetailsModal = (certificate) => {
+    setSelectedCertificate(certificate);
+    setDetailsModalOpen(true);
+  };
+
+  const closeDetailsModal = () => {
+    setSelectedCertificate(null);
+    setDetailsModalOpen(false);
   };
 
   // ================= RAISE APPROVAL REQUEST =================
@@ -271,7 +285,10 @@ const InstituteDashboard = () => {
     
 
     if (modalType === "logout") {
-      localStorage.clear();
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      localStorage.removeItem("userId");
+      localStorage.removeItem("userName");
       navigate("/");
       closeModal();
     }
@@ -599,6 +616,8 @@ const InstituteDashboard = () => {
       return (
         item.id?.toLowerCase().includes(q) ||
         item.user_id?.toLowerCase().includes(q) ||
+        item.user_name?.toLowerCase().includes(q) ||
+        item.user_email?.toLowerCase().includes(q) ||
         item.file_name?.toLowerCase().includes(q)
       );
     });
@@ -634,10 +653,10 @@ const InstituteDashboard = () => {
                 </p>
 
                 <p className="mt-2 text-gray-600 dark:text-gray-300">
-                  User ID: {item.user_id}
+                  Certificate Holder: {item.user_name}
                 </p>
 
-                <div className="flex gap-4 mt-3">
+                <div className="flex gap-4 mt-3 flex-wrap">
                   <button
                     onClick={() => handleDownload(item.file_url)}
                     className="
@@ -651,6 +670,21 @@ const InstituteDashboard = () => {
                     "
                   >
                     View
+                  </button>
+
+                  <button
+                    onClick={() => openDetailsModal(item)}
+                    className="
+                      px-5
+                      py-2
+                      rounded-xl
+                      bg-yellow-500
+                      text-white
+                      hover:bg-yellow-600
+                      transition-all
+                    "
+                  >
+                    More Details
                   </button>
                 </div>
               </div>
@@ -854,6 +888,99 @@ const InstituteDashboard = () => {
         onConfirm={handleConfirm}
         onCancel={closeModal}
       />
+      {/* DETAILS MODAL */}
+
+      {detailsModalOpen && selectedCertificate && (
+        <div
+          className="
+            fixed
+            inset-0
+            z-50
+            flex
+            items-center
+            justify-center
+            bg-black/40
+            backdrop-blur-sm
+            px-4
+          "
+        >
+          <div
+            className="
+              w-full
+              max-w-lg
+              rounded-3xl
+              border
+              bg-white/90
+              dark:bg-[#0B1120]/90
+              border-gray-200
+              dark:border-white/10
+              backdrop-blur-2xl
+              shadow-2xl
+              p-8
+            "
+          >
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Certificate Details
+            </h2>
+
+            <div className="space-y-5 mt-6 text-gray-700 dark:text-gray-300">
+
+              <div>
+                <h3 className="font-semibold text-lg">
+                  User Details
+                </h3>
+
+                <p>
+                  <strong>Name:</strong>{" "}
+                  {selectedCertificate.user_name}
+                </p>
+
+                <p>
+                  <strong>Email:</strong>{" "}
+                  {selectedCertificate.user_email}
+                </p>
+
+                <p>
+                  <strong>User ID:</strong>{" "}
+                  {selectedCertificate.user_id}
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-lg">
+                  Certificate Details
+                </h3>
+
+                <p>
+                  <strong>Certificate Name:</strong>{" "}
+                  {selectedCertificate.file_name}
+                </p>
+
+                <p>
+                  <strong>Certificate ID:</strong>{" "}
+                  {selectedCertificate.id}
+                </p>
+              </div>
+
+            </div>
+
+            <button
+              onClick={closeDetailsModal}
+              className="
+                mt-8
+                w-full
+                py-3
+                rounded-2xl
+                bg-blue-600
+                text-white
+                hover:bg-blue-700
+              "
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

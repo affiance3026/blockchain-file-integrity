@@ -15,6 +15,9 @@ const VerifierDashboard = () => {
   const [requests, setRequests] = useState([]);
   const [profile, setProfile] = useState(null);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
+  // Details Modal
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null);
 
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
@@ -118,6 +121,18 @@ const VerifierDashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // ================= DETAILS MODAL =================
+
+  const openDetailsModal = (request) => {
+    setSelectedRequest(request);
+    setDetailsModalOpen(true);
+  };
+
+  const closeDetailsModal = () => {
+    setSelectedRequest(null);
+    setDetailsModalOpen(false);
   };
 
   // ================= FETCH PROFILE =================
@@ -265,7 +280,10 @@ const VerifierDashboard = () => {
   // ================= LOGOUT =================
 
   const handleLogout = () => {
-    localStorage.clear();
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("userName");
     navigate("/");
     closeModal();
   };
@@ -477,6 +495,9 @@ const VerifierDashboard = () => {
 
       return (
         item.id?.toLowerCase().includes(q) ||
+        item.user_name?.toLowerCase().includes(q) ||
+        item.user_id?.toLowerCase().includes(q) ||
+        item.file_name?.toLowerCase().includes(q) ||
         item.certificate_id?.toLowerCase().includes(q)
       );
     });
@@ -504,11 +525,15 @@ const VerifierDashboard = () => {
                 "
               >
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  Request ID: {item.id}
+                  Certificate ID: {item.certificate_id}
                 </h2>
 
                 <p className="mt-2 text-gray-600 dark:text-gray-300">
-                  Certificate ID: {item.certificate_id}
+                  User Name: {item.user_name}
+                </p>
+
+                <p className="mt-2 text-gray-600 dark:text-gray-300">
+                  Certificate Name: {item.file_name}
                 </p>
 
                 <p
@@ -529,13 +554,24 @@ const VerifierDashboard = () => {
                     : "Pending"}
                 </p>
 
-                <p className="mt-2 text-gray-600 dark:text-gray-300">
-                  From: {new Date(item.from_time).toLocaleString()}
-                </p>
+                <div className="flex gap-4 mt-3 flex-wrap">
 
-                <p className="mt-2 text-gray-600 dark:text-gray-300">
-                  To: {new Date(item.to_time).toLocaleString()}
-                </p>
+                  <button
+                    onClick={() => openDetailsModal(item)}
+                    className="
+                      px-5
+                      py-2
+                      rounded-xl
+                      bg-yellow-500
+                      text-white
+                      hover:bg-yellow-600
+                      transition-all
+                    "
+                  >
+                    More Details
+                  </button>
+
+                </div>
 
                 {item.status === "approved" &&
                   new Date() >= new Date(item.from_time) &&
@@ -779,7 +815,7 @@ const VerifierDashboard = () => {
                 <SearchBox
                   value={searchQuery}
                   onChange={setSearchQuery}
-                  placeholder="Search by Request ID or Certificate ID"
+                  placeholder="Search"
                 />
               )}
           </div>
@@ -797,6 +833,126 @@ const VerifierDashboard = () => {
         onConfirm={handleConfirm}
         onCancel={closeModal}
       />
+
+      {/* DETAILS MODAL */}
+
+      {detailsModalOpen && selectedRequest && (
+        <div
+          className="
+            fixed
+            inset-0
+            z-50
+            flex
+            items-center
+            justify-center
+            bg-black/40
+            backdrop-blur-sm
+            px-4
+          "
+        >
+          <div
+            className="
+              w-full
+              max-w-lg
+              rounded-3xl
+              border
+              bg-white/90
+              dark:bg-[#0B1120]/90
+              border-gray-200
+              dark:border-white/10
+              backdrop-blur-2xl
+              shadow-2xl
+              p-8
+            "
+          >
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Request Details
+            </h2>
+
+            <div className="space-y-5 mt-6 text-gray-700 dark:text-gray-300">
+
+              <div>
+                <h3 className="font-semibold text-lg">
+                  Request Details
+                </h3>
+
+                <p>
+                  <strong>Request ID:</strong>{" "}
+                  {selectedRequest.id}
+                </p>
+
+                <p>
+                  <strong>Status:</strong>{" "}
+                  {selectedRequest.status.charAt(0).toUpperCase()+selectedRequest.status.slice(1)}
+                </p>
+
+                <p>
+                  <strong>Access From:</strong>{" "}
+                  {new Date(selectedRequest.from_time).toLocaleString("en-IN")}
+                </p>
+
+                <p>
+                  <strong>Access To:</strong>{" "}
+                  {new Date(selectedRequest.to_time).toLocaleString("en-IN")}
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-lg">
+                  Certificate Details
+                </h3>
+
+                <p>
+                  <strong>Certificate Name:</strong>{" "}
+                  {selectedRequest.file_name}
+                </p>
+
+                <p>
+                  <strong>Certificate ID:</strong>{" "}
+                  {selectedRequest.certificate_id}
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-lg">
+                  User Details
+                </h3>
+
+                <p>
+                  <strong>Name:</strong>{" "}
+                  {selectedRequest.user_name}
+                </p>
+
+                <p>
+                  <strong>Email:</strong>{" "}
+                  {selectedRequest.user_email}
+                </p>
+
+                <p>
+                  <strong>User ID:</strong>{" "}
+                  {selectedRequest.user_id}
+                </p>
+              </div>
+
+            </div>
+
+            <button
+              onClick={closeDetailsModal}
+              className="
+                mt-8
+                w-full
+                py-3
+                rounded-2xl
+                bg-blue-600
+                text-white
+                hover:bg-blue-700
+              "
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

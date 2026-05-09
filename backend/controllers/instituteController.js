@@ -167,9 +167,25 @@ exports.getIssuedCertificates = async (req, res) => {
       institute_id: instituteId,
     });
 
+    const updatedCertificates = await Promise.all(
+      certificates.map(async (cert) => {
+
+        const user = await User.findOne({
+          id: cert.user_id
+        });
+
+        return {
+          ...cert._doc,
+
+          user_name: user?.name || "N/A",
+          user_email: user?.email || "N/A",
+        };
+      })
+    );
+
     res.status(200).json({
       message: "Issued certificates fetched successfully",
-      data: certificates,
+      data: updatedCertificates,
     });
 
   } catch (error) {

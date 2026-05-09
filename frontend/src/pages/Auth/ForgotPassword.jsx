@@ -204,7 +204,7 @@ const ForgotPassword = () => {
             "
           >
 
-            <h2 className="text-2xl mb-6 font-bold text-center text-gray-900 dark:text-white">
+            <h2 className="text-3xl mb-6 font-bold text-center text-gray-900 dark:text-white">
                 Reset Password
             </h2>
 
@@ -269,6 +269,18 @@ const ForgotPassword = () => {
                     `}
                 >
                     {sendLoading ? "Sending..." : "Send OTP"}
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => navigate("/")}
+                  className="
+                    w-full py-3 rounded-xl font-semibold text-white
+                    bg-red-600 hover:bg-red-650
+                    shadow-lg hover:scale-[1.02] transition-all duration-300
+                  "
+                >
+                  Cancel
                 </button>
 
                 </form>

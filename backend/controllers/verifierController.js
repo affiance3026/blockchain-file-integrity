@@ -1,7 +1,7 @@
 const Verifier = require("../models/verifier.model");
 const Certificate = require("../models/certificate.model");
 const AccessRequest = require("../models/accessRequest.model");
-
+const User = require("../models/user.model");
 const contract = require("../config/contract");
 
 const generateId = require("../utils/generateId");
@@ -103,9 +103,35 @@ exports.getMyRequests = async (req, res) => {
       verifier_id: verifierId
     });
 
+    const updatedRequests = await Promise.all(
+      requests.map(async (reqItem) => {
+
+        // Fetch Certificate
+        const certificate = await Certificate.findOne({
+          id: reqItem.certificate_id
+        });
+
+        // Fetch User
+        const user = await User.findOne({
+          id: reqItem.user_id
+        });
+
+        return {
+          ...reqItem._doc,
+
+          // Certificate Details
+          file_name: certificate?.file_name || "N/A",
+
+          // User Details
+          user_name: user?.name || "N/A",
+          user_email: user?.email || "N/A",
+        };
+      })
+    );
+
     res.status(200).json({
       message: "Verifier requests fetched successfully",
-      data: requests
+      data: updatedRequests
     });
 
   } catch (error) {
