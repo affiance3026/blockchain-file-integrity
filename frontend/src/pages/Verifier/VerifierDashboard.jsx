@@ -257,7 +257,7 @@ const VerifierDashboard = () => {
       console.error(error);
 
       toast.error(
-        error?.response?.data?.message ||
+        error?.response?.data?.status ||
           "Verification failed"
       );
     }finally {
@@ -280,6 +280,7 @@ const VerifierDashboard = () => {
   // ================= LOGOUT =================
 
   const handleLogout = () => {
+    toast.success("Logout successfull");
     localStorage.removeItem("token");
     localStorage.removeItem("role");
     localStorage.removeItem("userId");

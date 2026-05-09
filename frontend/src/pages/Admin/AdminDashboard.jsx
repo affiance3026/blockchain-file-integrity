@@ -105,6 +105,7 @@ const AdminDashboard = () => {
   // ================= LOGOUT =================
 
   const handleLogout = () => {
+    toast.success("Logout successfull");
     localStorage.removeItem("token");
     localStorage.removeItem("role");
     localStorage.removeItem("userId");

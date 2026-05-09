@@ -152,7 +152,7 @@ const UserDashboard = () => {
   const handleApprove = async () => {
     try {
       await API.put(`/user/approve-request/${selectedRequestId}`);
-
+      toast.success("Approved successfully");
       fetchRequests();
       closeModal();
     } catch (error) {
@@ -165,7 +165,7 @@ const UserDashboard = () => {
   const handleReject = async () => {
     try {
       await API.put(`/user/reject-request/${selectedRequestId}`);
-
+      toast.error("Rejected successfully");
       fetchRequests();
       closeModal();
     } catch (error) {
@@ -176,6 +176,7 @@ const UserDashboard = () => {
   // ================= LOGOUT =================
 
   const handleLogout = () => {
+    toast.success("Logout successfull");
     localStorage.removeItem("token");
     localStorage.removeItem("role");
     localStorage.removeItem("userId");

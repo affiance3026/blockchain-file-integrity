@@ -80,14 +80,14 @@ exports.requestAccess = async (req, res) => {
     await newRequest.save();
 
     res.status(201).json({
-      message: "Access request created successfully",
+      message: "Access request raised successfully",
       requestId
     });
 
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      message: "Failed to create access request"
+      message: "Failed to raise access request"
     });
   }
 };
@@ -178,7 +178,7 @@ exports.verifyCertificateByUpload = async (req, res) => {
       });
     }
 
-    res.status(200).json({
+    res.status(400).json({
       status: "Certificate tampered"
     });
 

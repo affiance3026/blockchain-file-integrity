@@ -11,7 +11,7 @@ export const ThemeProvider = ({ children }) => {
     }
 
     // Default theme → Dark Mode
-    return true;
+    return false;
   });
 
   useEffect(() => {

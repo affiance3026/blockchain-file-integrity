@@ -180,7 +180,7 @@ const InstituteDashboard = () => {
   // Update Password
   const handleUpdatePassword = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast.error("Confirm Password do not match");
+      toast.error("Passwords do not match");
       return;
     }
 
@@ -285,6 +285,7 @@ const InstituteDashboard = () => {
     
 
     if (modalType === "logout") {
+      toast.success("Logout successfull");
       localStorage.removeItem("token");
       localStorage.removeItem("role");
       localStorage.removeItem("userId");
