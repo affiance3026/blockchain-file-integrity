@@ -124,6 +124,10 @@ RPC_URL=your_sepolia_rpc_url
 PRIVATE_KEY=your_wallet_private_key
 CONTRACT_ADDRESS=your_deployed_contract_address
 ETHERSCAN_API_KEY=your_etherscan_api_key
+
+# Forgot Password
+EMAIL_USER=your email
+EMAIL_PASS=email passkey
 ```
 ---
 
@@ -206,10 +210,5 @@ npx hardhat run scripts/deploy.js --network sepolia
 ## 👨‍💻 Author
 
 **C T Ullas**
-MCA, RV College of Engineering
 
 ---
-
-## 📌 Note
-
-This project was developed as part of the **Major Project (MCA491P)** and **Project Management (MCA293E4)** coursework.
