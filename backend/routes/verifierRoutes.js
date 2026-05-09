@@ -8,7 +8,6 @@ const {
   requestAccess,
   getMyRequests,
   verifyCertificateByUpload,
-  viewOriginalCertificate,
   getVerifierProfile,
   checkCertificateDetails
 } = require("../controllers/verifierController");
@@ -58,12 +57,6 @@ router.post(
   verifyCertificateByUpload
 );
 
-router.get(
-  "/view-certificate/:id",
-  authMiddleware,
-  verifierMiddleware,
-  viewOriginalCertificate
-);
 
 router.get(
   "/profile",

@@ -190,69 +190,6 @@ exports.verifyCertificateByUpload = async (req, res) => {
   }
 };
 
-
-// ================= VIEW ORIGINAL CERTIFICATE =================
-
-exports.viewOriginalCertificate = async (req, res) => {
-  try {
-    const requestId = req.params.id;
-
-    const request = await AccessRequest.findOne({
-      id: requestId
-    });
-
-    if (!request) {
-      return res.status(404).json({
-        message: "Access request not found"
-      });
-    }
-
-    // Must be approved
-    if (request.status !== "approved") {
-      return res.status(403).json({
-        message: "Access not approved yet"
-      });
-    }
-
-    const now = new Date();
-
-    if (
-      now < new Date(request.from_time) ||
-      now > new Date(request.to_time)
-    ) {
-      return res.status(403).json({
-        message: "Access time expired or not started"
-      });
-    }
-
-    const certificate = await Certificate.findOne({
-      id: request.certificate_id
-    });
-
-    if (!certificate) {
-      return res.status(404).json({
-        message: "Certificate not found"
-      });
-    }
-
-    res.status(200).json({
-      message: "Certificate view access granted",
-      data: {
-        certificate_id: certificate.id,
-        file_name: certificate.file_name,
-        file_url: certificate.file_url
-      }
-    });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      message: "Failed to fetch certificate"
-    });
-  }
-};
-
-
 // ================= GET VERIFIER PROFILE =================
 
 exports.getVerifierProfile = async (req, res) => {
