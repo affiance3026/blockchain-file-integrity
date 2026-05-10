@@ -11,7 +11,7 @@ const VerifierDashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("Raise Request");
   const [loading, setLoading] = useState(false);
-  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [verifyingId, setVerifyingId] = useState("");
   const [requests, setRequests] = useState([]);
   const [profile, setProfile] = useState(null);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
@@ -234,7 +234,7 @@ const VerifierDashboard = () => {
     if (!validateFile(verifyFile)) return;
 
     try {
-      setVerifyLoading(true);
+      setVerifyingId(selectedCertificateId);
       const formData = new FormData();
       formData.append("certificate_id", selectedCertificateId);
       formData.append("file", verifyFile);
@@ -261,7 +261,7 @@ const VerifierDashboard = () => {
           "Verification failed"
       );
     }finally {
-    setVerifyLoading(false);
+    setVerifyingId("");
   }
   };
 
@@ -623,7 +623,7 @@ const VerifierDashboard = () => {
 
                     <button
                       onClick={handleVerifyCertificate}
-                      disabled={verifyLoading}
+                      disabled={verifyingId === item.certificate_id}
                       className={`
                         mt-4
                         px-6
@@ -632,13 +632,13 @@ const VerifierDashboard = () => {
                         text-white
                         transition-all
                         ${
-                          verifyLoading
+                          verifyingId === item.certificate_id
                             ? "bg-green-400 cursor-not-allowed opacity-70"
                             : "bg-green-600 hover:bg-green-700"
                         }
                       `}
                     >
-                      {verifyLoading ? "Verifying..." : "Upload & Verify"}
+                      {verifyingId === item.certificate_id ? "Verifying..." : "Upload & Verify"}
                     </button>
                   </div>
                 )}
