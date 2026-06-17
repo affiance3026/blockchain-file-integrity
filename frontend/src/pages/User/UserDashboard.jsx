@@ -348,7 +348,7 @@ const UserDashboard = () => {
                     From: {new Date(item.from_time).toLocaleString("en-IN")}
                   </p>
                   <p className="mt-2 text-gray-600 dark:text-gray-300">
-                    To: {new Date(item.from_time).toLocaleString("en-IN")}
+                    To: {new Date(item.to_time).toLocaleString("en-IN")}
                   </p>
                   </div>
                 )}
